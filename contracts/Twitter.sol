@@ -18,6 +18,7 @@ contract Twitter{
     string content;
     address author;
     uint256 timestamp;
+    bool deleted; // consistant gaz price to fetch delete and post new tweet
   }
   //convention add '_'  for variable parameter
   Tweet[] private _tweets; // this will act as our database.
@@ -41,6 +42,7 @@ contract Twitter{
   newTweet.timestamp = block.timestamp;
   newTweet.id = _tweets.length;
   //tweetIdToOwner[_tweets.length] = msg.sender;
+  newTweet.deleted = false;
 
     _tweets.push(newTweet);// array has the length, push, pop method.
   }
@@ -52,6 +54,7 @@ contract Twitter{
    */
   // view:; they don't write anything to the blockchain and they won't cost a thing.
   function getTweet(uint256 _id) external view returns(Tweet memory){// calldata the user has to define it.
+    require(_tweets[_id].deleted == false, 'The tweet you are searching is deleted');
     return _tweets[_id];
   }
 
@@ -61,7 +64,16 @@ contract Twitter{
   // why specify return type bcz when you compile the code, the compiler will check the squeleton of your function so that the 'abi' will check only the shape.
   function getTweets() external view returns(Tweet[] memory){ // view bcz you are not writing anything on the blockchain 
   // each time you call a function you pay in gass(converted in ethers) except when you view
-      return _tweets;
+      Tweet[] memory returnTweets;
+      uint256 j;
+      // Go through the entire array of tweets and only return the not-deleted tweets
+      for(uint256 i = 0;  i < _tweets.length; i++){
+        if(_tweets[i].deleted == false){
+          returnTweets[j] = _tweets[i];
+          j++;
+        }
+      }
+      return returnTweets;
   }
 
 
@@ -71,11 +83,17 @@ contract Twitter{
    */
   // require: check for condition. defie the 1st argument and goes on forward if true.
   function updateTweet(uint _id, string calldata _newContent) external {
+    require(_tweets[_id].deleted == false, 'The tweet you are searching is deleted');
     require(_tweets[_id].author == msg.sender, 'Only the author of the tweet can edit it');
     _tweets[_id].content = _newContent;
   }
 
 
+  function deleteTweet(uint256 _id) external{
+    require(_tweets[_id].deleted == false, 'You are trying to delete ');
+    require(_tweets[_id].author == msg.sender, 'Only the author of the tweet can edit it');
+    _tweets[_id].deleted = true;
+  }
   
 }
 

@@ -7,6 +7,10 @@
 const hre = require("hardhat");
 
 async function main() {
+  // smart contract class
+
+  // smart contract instance
+  const twitter = await hre.ethers.getContractFactory('Twitter');
   const currentTimestampInSeconds = Math.round(Date.now() / 1000);
   const unlockTime = currentTimestampInSeconds + 60;
 
